@@ -1,6 +1,5 @@
-const { Op, Sequelize } = require('sequelize');
+const { Op } = require('sequelize');
 const { sequelize } = require('../model');
-const { RequestError } = require('../utils');
 const HttpError = require('../HttpError');
 
 class JobService {
