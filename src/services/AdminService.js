@@ -42,10 +42,13 @@ class AdminService {
             raw: true
         });
 
-        if (!jobs || jobs.length === 0) {
-            throw { status: 404, message: 'Professions not found' };
+        if(!jobs.length) {
+            return {
+                profession: null,
+                earned: null
+            }
         }
-        console.log(jobs[0])
+
         return {
             profession: jobs[0]['Contract.Contractor.profession'],
             earned: jobs[0].total_price
@@ -86,9 +89,9 @@ class AdminService {
             limit: limit || 2,
         });
 
-        if (!clientsData || clientsData.length === 0) {
-            throw { status: 404, message: 'Clients not found' };
-        }
+        // if (!clientsData || clientsData.length === 0) {
+            // throw { status: 404, message: 'Clients not found' };
+        // }
 
         const customResults = clientsData.map((clientData) => {
             return {
