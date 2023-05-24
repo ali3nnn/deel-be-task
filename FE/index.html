@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>API Frontend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin-top: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .input-field {
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            display: flex;
+            align-items: center;
+        }
+
+        .form-group label {
+            margin-right: 10px;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group input[type="date"] {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        .form-group button[type="submit"] {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 14px;
+            margin-left: 10px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        #profileIdContainer {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Profile ID</h1>
+    <div class="card" id="profileIdContainer">
+        <label for="profileId">Profile ID:</label>
+        <input type="text" id="profileIdInput" value="1" />
+        <button class="button" onclick="updateProfileId()">Update Profile ID</button>
+    </div>
+
+    <h1>Contracts</h1>
+    <div class="card">
+        <button class="button" onclick="getContracts()">Get Contracts</button>
+        <div id="contracts"></div>
+    </div>
+
+    <h1>Unpaid Jobs</h1>
+    <div class="card">
+        <button class="button" onclick="getUnpaidJobs()">Get Unpaid Jobs</button>
+        <div id="jobs"></div>
+    </div>
+
+    <h1>Pay Job</h1>
+    <div class="card">
+        <button class="button" onclick="payJob()">Pay Job</button>
+        <div id="payJob"></div>
+    </div>
+
+    <h1>Deposit Balance</h1>
+    <div class="card">
+        <form id="depositForm" onsubmit="depositBalance(event)">
+            <div class="form-group">
+                <label for="userId">User ID:</label>
+                <input type="text" id="userId" required />
+            </div>
+            <div class="form-group">
+                <label for="amount">Amount:</label>
+                <input type="number" id="amount" step="0.01" required />
+            </div>
+            <button class="button" type="submit">Deposit</button>
+        </form>
+        <div id="depositBalance"></div>
+    </div>
+
+    <h1>Best Profession</h1>
+    <div class="card">
+        <form id="bestProfessionForm" onsubmit="getBestProfession(event)">
+            <div class="form-group">
+                <label for="start">Start Date:</label>
+                <input type="date" id="start" required />
+            </div>
+            <div class="form-group">
+                <label for="end">End Date:</label>
+                <input type="date" id="end" required />
+            </div>
+            <button class="button" type="submit">Get Best Profession</button>
+        </form>
+        <div id="bestProfession"></div>
+    </div>
+
+    <h1>Best Clients</h1>
+    <div class="card">
+        <form id="bestClientsForm" onsubmit="getBestClients(event)">
+            <div class="form-group">
+                <label for="start">Start Date:</label>
+                <input type="date" id="start" required />
+            </div>
+            <div class="form-group">
+                <label for="end">End Date:</label>
+                <input type="date" id="end" required />
+            </div>
+            <div class="form-group">
+                <label for="limit">Limit:</label>
+                <input type="number" id="limit" required />
+            </div>
+            <button class="button" type="submit">Get Best Clients</button>
+        </form>
+        <div id="bestClients"></div>
+    </div>
+
+    <script>
+        const apiUrl = 'http://localhost:3001';
+        let profileId = '12345';
+
+        function updateProfileId() {
+            profileId = document.getElementById('profileIdInput').value;
+        }
+
+        async function getContracts() {
+            const response = await fetch(`${apiUrl}/contracts`, { headers: { profile_id: profileId } });
+            const data = await response.json();
+            const contractsDiv = document.getElementById('contracts');
+
+            if (response.ok) {
+                if (data.length === 0) {
+                    contractsDiv.innerHTML = 'No contracts found';
+                } else {
+                    contractsDiv.innerHTML = '<ul>' + data.map(contract => `<li>Contract ID: ${contract.id}, Name: ${contract.status}</li>`).join('') + '</ul>';
+                }
+            } else {
+                contractsDiv.innerHTML = 'Error fetching contracts';
+            }
+        }
+
+        async function getUnpaidJobs() {
+            const response = await fetch(`${apiUrl}/jobs/unpaid`, { headers: { profile_id: profileId } });
+            const data = await response.json();
+            const jobsDiv = document.getElementById('jobs');
+
+            if (response.ok) {
+                if (data.length === 0) {
+                    jobsDiv.innerHTML = 'No unpaid jobs found';
+                } else {
+                    jobsDiv.innerHTML = '<ul>' + data.map(job => `<li>Job ID: ${job.id}</li>`).join('') + '</ul>';
+                }
+            } else {
+                jobsDiv.innerHTML = 'Error fetching unpaid jobs';
+            }
+        }
+
+        async function payJob() {
+            const jobId = prompt('Enter Job ID:');
+            const response = await fetch(`${apiUrl}/jobs/${jobId}/pay`, { method: 'POST', headers: { profile_id: profileId } });
+            const data = await response.text();
+            const payJobDiv = document.getElementById('payJob');
+
+            if (response.ok) {
+                payJobDiv.innerHTML = data;
+            } else {
+                payJobDiv.innerHTML = 'Error paying job';
+            }
+        }
+
+        async function depositBalance(event) {
+            event.preventDefault();
+            const userId = document.getElementById('userId').value;
+            const amount = document.getElementById('amount').value;
+            const response = await fetch(`${apiUrl}/balance/deposit/${userId}`, { method: 'POST', headers: { profile_id: profileId, 'Content-Type': 'application/json' }, body: JSON.stringify({ amount }) });
+            const data = await response.text();
+            const depositBalanceDiv = document.getElementById('depositBalance');
+
+            if (response.ok) {
+                depositBalanceDiv.innerHTML = data;
+            } else {
+                depositBalanceDiv.innerHTML = 'Error depositing balance';
+            }
+        }
+
+        async function getBestProfession(event) {
+            event.preventDefault();
+            const start = document.getElementById('start').value;
+            const end = document.getElementById('end').value;
+            const response = await fetch(`${apiUrl}/admin/best-profession?start=${start}&end=${end}`, { headers: { profile_id: profileId } });
+            const data = await response.json();
+            const bestProfessionDiv = document.getElementById('bestProfession');
+            console.log(data)
+
+            if (response.ok) {
+                bestProfessionDiv.innerHTML = `Best profession between ${start} and ${end}: ${JSON.stringify(data)}`;
+            } else {
+                bestProfessionDiv.innerHTML = 'Error getting best profession';
+            }
+        }
+
+        async function getBestClients(event) {
+            event.preventDefault();
+            const start = document.getElementById('start').value;
+            const end = document.getElementById('end').value;
+            const limit = document.getElementById('limit').value;
+            const response = await fetch(`${apiUrl}/admin/best-clients?start=${start}&end=${end}&limit=${limit}`, { headers: { profile_id: profileId } });
+            const data = await response.json();
+            const bestClientsDiv = document.getElementById('bestClients');
+
+            if (response.ok) {
+                if (data.length === 0) {
+                    bestClientsDiv.innerHTML = 'No best clients found';
+                } else {
+                    bestClientsDiv.innerHTML = '<ul>' + data.map(client => `<li>Client ID: ${client.id}, Name: ${client.name}, Paid: $${client.totalPaid}</li>`).join('') + '</ul>';
+                }
+            } else {
+                bestClientsDiv.innerHTML = 'Error getting best clients';
+            }
+        }
+    </script>
+</body>
+
+</html>
