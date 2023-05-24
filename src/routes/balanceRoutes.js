@@ -13,10 +13,7 @@ router.post('/deposit/:userId', async (req, res) => {
         const result = await balanceService.deposit(userId, amount);
         res.status(200).send(result);
     } catch (error) {
-        res.status(error.status || 500).send({
-            message: error.message,
-            status: error.status
-        } || error);
+        res.status(error.code).send(error.message);
     }
 });
 

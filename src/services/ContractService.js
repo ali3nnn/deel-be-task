@@ -1,4 +1,5 @@
 const { Op } = require('sequelize');
+const HttpError = require('../HttpError');
 
 class ContractService {
   constructor(models) {
@@ -16,6 +17,10 @@ class ContractService {
       },
     });
 
+    if(!contract) {
+      throw new HttpError(404, "Contracts not found")
+    }
+
     return contract;
   }
 
@@ -29,6 +34,10 @@ class ContractService {
         status: { [Op.ne]: 'terminated' },
       },
     });
+
+    if(!contracts.length) {
+      throw new HttpError(404, "Contracts not found")
+    }
 
     return contracts;
   }

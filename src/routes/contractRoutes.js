@@ -5,33 +5,32 @@ const ContractService = require('../services/ContractService')
 
 // GET /contracts/:id - Get contract by ID
 router.get('/:id', getProfile, async (req, res) => {
-  const { id: contractId} = req.params;
-  const { id: profileId} = req.profile;
   const models = req.app.get('models');
+  const { id: contractId } = req.params;
+  const { id: profileId } = req.profile;
   const contractService = new ContractService(models);
 
-  const contract = await contractService.getContractById(contractId, profileId)
-
-  if (!contract) {
-    return res.status(404).send();
+  try {
+    const contract = await contractService.getContractById(contractId, profileId)
+    res.status(200).send(contract);
+  } catch(err) {
+    res.status(err.code).send(err.message)
   }
 
-  res.status(200).json(contract);
 });
 
 // GET /contracts - Get contracts for user
 router.get('/', getProfile, async (req, res) => {
   const models = req.app.get('models');
+  const { id: profileId } = req.profile;
   const contractService = new ContractService(models);
-  const { id: profileId} = req.profile;
 
-  const contracts = await contractService.getContractsByProfileId(profileId)
-
-  if (!contracts) {
-    return res.status(404).send();
+  try {
+    const contracts = await contractService.getContractsByProfileId(profileId)
+    res.status(200).send(contracts)
+  } catch (err) {
+    res.status(err.code).send(err.message)
   }
-
-  res.json(contracts);
 });
 
 module.exports = router;

@@ -1,4 +1,6 @@
 const { Op } = require('sequelize');
+const { sequelize } = require('../model');
+const HttpError = require('../HttpError');
 
 class BalanceService {
     constructor(models) {
@@ -12,11 +14,11 @@ class BalanceService {
             const client = await Profile.findByPk(userId);
 
             if (!client || client.type === 'contractor') {
-                throw new RequestError('Invalid user', 400)
+                throw new HttpError(400, 'Invalid user')
             }
 
             if (!amount) {
-                throw new RequestError('Invalid amount', 400)
+                throw new HttpError(400, 'Invalid amount')
             }
 
             const unpaidAmount = await Job.sum('price', {
@@ -37,38 +39,17 @@ class BalanceService {
             })
 
             if (amount > unpaidAmount * 0.25) {
-                throw new RequestError('Limit exceeded', 400)
+                throw new HttpError(400, 'Limit exceeded')
             }
 
-<<<<<<< HEAD
-        if (amount > sumOfUnpaidJobs * 0.25) {
-            throw {
-                message: 'Limit exceeded',
-                status: 400
-            }
-        }
-=======
             client.balance = parseFloat((client.balance + amount).toFixed(2))
->>>>>>> 620a3d9 (feat: refactored balance service to use transaction)
 
             await client.save({ transaction: t })
 
             return client
         })
 
-<<<<<<< HEAD
-            return {
-                old_balance: client.balance,
-                new_balance: updatedClient.balance,
-            };
-        } catch (error) {
-            throw {
-                message: error
-            };
-        }
-=======
         return result
->>>>>>> 620a3d9 (feat: refactored balance service to use transaction)
     }
 }
 

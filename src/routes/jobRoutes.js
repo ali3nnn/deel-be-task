@@ -6,30 +6,29 @@ const JobService = require('../services/JobService');
 // GET /jobs/unpaid - Get unpaid jobs for user's active contracts
 router.get('/unpaid', getProfile, async (req, res) => {
   const models = req.app.get('models');
+  const { id: profileId } = req.profile;
   const jobService = new JobService(models);
+  
   try {
-    const { id: profileId } = req.profile;
     const jobs = await jobService.getUnpaidJobsForUser(profileId);
-    res.status(200).json(jobs);
+    res.status(200).send(jobs);
   } catch (error) {
-    console.log(error)
-    res.status(500).send(error);
+    res.status(error.code).send(error.message);
   }
 });
 
 // POST /jobs/:job_id/pay - Client pays the contractors for job
 router.post('/:job_id/pay', getProfile, async (req, res) => {
   const models = req.app.get('models');
+  const client = req.profile;
+  const { job_id } = req.params;
   const jobService = new JobService(models);
+
   try {
-    const client = req.profile;
-    const { job_id } = req.params;
     await jobService.payJob(job_id, client);
-    res.status(200).send({
-      message: `Job ${job_id} has been paid`
-    });
+    res.status(200).send(`Job ${job_id} has been paid`);
   } catch (error) {
-    res.status(error.status || 500).send(error);
+    res.status(error.code).send(error.message);
   }
 });
 

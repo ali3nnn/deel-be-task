@@ -1,5 +1,7 @@
 const { Op, Sequelize } = require('sequelize');
 const { sequelize } = require('../model');
+const { RequestError } = require('../utils');
+const HttpError = require('../HttpError');
 
 class JobService {
   constructor(models) {
@@ -26,6 +28,10 @@ class JobService {
       where: { paid: { [Op.or]: [null, false] } },
     });
 
+    if (!jobs.length) {
+      throw new HttpError(404, "No unpaid jobs found")
+    }
+
     return jobs;
   }
 
@@ -34,10 +40,7 @@ class JobService {
 
 
     if (client.type === 'contractor') {
-      throw {
-        message: 'You are not a client',
-        status: 403
-      }
+      throw new HttpError(403, `You are not a client`)
     }
 
     const job = await this.Job.findOne({
@@ -59,17 +62,11 @@ class JobService {
     })
 
     if (!job) {
-      throw {
-        message: "Job not found or it has been paid",
-        status: 200
-      }
+      throw new HttpError(404, `Job not found or it has been paid`)
     }
 
     if (client.balance < job.price) {
-      throw {
-        message: "Client doesn't have enough balance",
-        status: 200
-      }
+      throw new HttpError(200, `Client doesn't have enough balance`)
     }
 
     const contractor = await this.Profile.findOne({
@@ -114,11 +111,9 @@ class JobService {
       const transactions = await Promise.all([p1, p2, p3])
       const isUpdatedFailed = transactions.some(item => !item[0])
 
-      if(isUpdatedFailed) {
-        throw {
-          message: "Request failed",
-          status: 500
-        }
+      if (isUpdatedFailed) {
+        throw new HttpError(500, `Request failed`)
+
       }
 
       // Run the transaction
@@ -129,8 +124,8 @@ class JobService {
 
       // Rollback the transaction
       await t.rollback();
-
-      throw error;
+      
+      throw new HttpError(500, JSON.stringify(error));
     }
   }
 

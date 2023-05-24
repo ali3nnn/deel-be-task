@@ -1,6 +1,7 @@
 const { Op } = require('sequelize');
 const { isValidDate } = require("../utils");
 const { sequelize } = require('../model');
+const HttpError = require('../HttpError');
 
 class AdminService {
 
@@ -12,7 +13,7 @@ class AdminService {
         const { Job, Contract, Profile } = this.models;
 
         if (!isValidDate(startDate) || !isValidDate(endDate)) {
-            throw { status: 400, message: 'Invalid date' };
+            throw new HttpError(400, 'Invalid date')
         }
 
         const jobs = await Job.findAll({
@@ -42,11 +43,8 @@ class AdminService {
             raw: true
         });
 
-        if(!jobs.length) {
-            return {
-                profession: null,
-                earned: null
-            }
+        if (!jobs.length) {
+            throw new HttpError(404, 'No jobs found')
         }
 
         return {
@@ -59,7 +57,7 @@ class AdminService {
         const { Job, Contract, Profile } = this.models;
 
         if (!isValidDate(startDate) || !isValidDate(endDate)) {
-            throw { status: 400, message: 'Invalid date' };
+            throw new HttpError(400, 'Invalid date')
         }
 
         const clientsData = await Job.findAll({
@@ -89,9 +87,9 @@ class AdminService {
             limit: limit || 2,
         });
 
-        // if (!clientsData || clientsData.length === 0) {
-            // throw { status: 404, message: 'Clients not found' };
-        // }
+        if(!clientsData.length) {
+            throw new HttpError(404, 'No clients found')
+        }
 
         const customResults = clientsData.map((clientData) => {
             return {
