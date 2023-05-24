@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const AdminService = require('../services/adminService');
+const AdminService = require('../services/AdminService');
 
 // GET /admin/best-profession - Get the best profession within a date range
 router.get('/best-profession', async (req, res) => {
