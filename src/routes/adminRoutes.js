@@ -12,7 +12,11 @@ router.get('/best-profession', async (req, res) => {
 
     try {
         const bestProfession = await adminService.getBestProfession(startDate, endDate, req.app.get('models'));
-        res.status(200).send(bestProfession);
+        if(bestProfession.profession) {
+            res.status(200).send(bestProfession);
+        } else {
+            res.status(404).end();
+        }
     } catch (error) {
         res.status(error.status || 500).send(error.message);
     }
@@ -29,7 +33,11 @@ router.get('/best-clients', async (req, res) => {
 
     try {
         const bestClients = await adminService.getBestClients(startDate, endDate, limit, req.app.get('models'));
-        res.status(200).send(bestClients);
+        if(bestClients.length) {
+            res.status(200).send(bestClients);
+        } else {
+            res.status(404).end();
+        }
     } catch (error) {
         res.status(error.status || 500).send(error.message);
     }
