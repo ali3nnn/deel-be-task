@@ -8,77 +8,55 @@ class BalanceService {
     async deposit(userId, amount) {
         const { Job, Contract, Profile } = this.models;
 
-        const client = await Profile.findByPk(userId);
+        const result = await sequelize.transaction(async (t) => {
+            const client = await Profile.findByPk(userId);
 
-        if (!client) {
-            throw {
-                message: 'Invalid user',
-                status: 400
+            if (!client || client.type === 'contractor') {
+                throw new RequestError('Invalid user', 400)
             }
-        }
 
-        if (!amount) {
-            throw {
-                message: 'Invalid amount',
-                status: 400
+            if (!amount) {
+                throw new RequestError('Invalid amount', 400)
             }
-        }
 
-        if (client.type === 'contractor') {
-            throw {
-                message: 'Invalid user type',
-                status: 400
-            }
-        }
-
-        const unpaidJobs = await Job.findAll({
-            include: {
-                model: Contract,
-                as: 'Contract',
+            const unpaidAmount = await Job.sum('price', {
                 where: {
-                    status: 'in_progress',
-                    ClientId: client.id,
+                    [Op.or]: [
+                        { paid: { [Op.or]: [null, false] } },
+                    ],
                 },
-            },
-            where: {
-                [Op.or]: [
-                    { paid: { [Op.or]: [null, false] } },
-                ],
+                include: {
+                    model: Contract,
+                    required: true,
+                    attributes: [],
+                    where: {
+                        status: 'in_progress',
+                        ClientId: client.id,
+                    },
+                },
+            })
+
+            if (amount > unpaidAmount * 0.25) {
+                throw new RequestError('Limit exceeded', 400)
             }
-        });
 
-        if (!unpaidJobs.length) {
-            return {
-                message: 'No unpaid jobs',
-                status: 200
-            }
-        }
-
-        const sumOfUnpaidJobs = unpaidJobs.reduce((acc, job) => {
-            return acc + job.price;
-        }, 0);
-
+<<<<<<< HEAD
         if (amount > sumOfUnpaidJobs * 0.25) {
             throw {
                 message: 'Limit exceeded',
                 status: 400
             }
         }
+=======
+            client.balance = parseFloat((client.balance + amount).toFixed(2))
+>>>>>>> 620a3d9 (feat: refactored balance service to use transaction)
 
-        try {
-             await Profile.update(
-                {
-                    balance: client.balance + amount,
-                },
-                {
-                    where: {
-                        id: client.id,
-                    }
-                }
-            );
+            await client.save({ transaction: t })
 
-            const updatedClient = await Profile.findByPk(client.id);
+            return client
+        })
 
+<<<<<<< HEAD
             return {
                 old_balance: client.balance,
                 new_balance: updatedClient.balance,
@@ -88,6 +66,9 @@ class BalanceService {
                 message: error
             };
         }
+=======
+        return result
+>>>>>>> 620a3d9 (feat: refactored balance service to use transaction)
     }
 }
 
